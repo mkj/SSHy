@@ -59,23 +59,26 @@ SSHyClient.parceler.prototype = {
 	handle: function(r) {
 		// Add the packet length to the parceler's rx
 		this.recieveData += r.length;
+		this.inbound_buffer += r;
 		this.transport.settings.setNetTraffic(transport.parceler.recieveData, true);
+
 		/* Checking for encryption first since it will be the most common check
 			- Parceler should send decrypted message ( -packet length -padding length -padding ) to transport.handle_dec()
 			  from there it should be send to the relevant handler (auth/control)		*/
 		if (this.encrypting) {
-			this.inbound_buffer += r;
 			this.decrypt();
 			return;
 		}
 
 		/* If we don't have a remote_version then send our version and set the remote_version */
 		if (!this.transport.remote_version) {
-			this.transport.handler_table[0](this.transport, r);
-			return;
+			this.inbound_buffer = this.transport.handler_table[0](this.transport, this.unbound_buffer);
+			if (!this.transport.remote_version) {
+				// still waiting for initial version string
+				return;
+			}
 		}
 
-		this.inbound_buffer += r;
 		this.decrypt(r);
 	},
 	// Decrypt messages from the SSH server

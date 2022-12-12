@@ -74,15 +74,25 @@ SSHyClient.Transport.prototype = {
     		`handler_table[id](<object> SSHyClient.transport, <string> message)`
     */
     handler_table: {
-		/* Sends our local SSH version to the SSH server */
-		0: function(self, m){
-			// Directly interface with the websocket
-			self.parceler.socket.sendB64(self.local_version + '\r\n');
-			// Slice off the '/r/n' from the end of our remote version
-			self.remote_version = m.slice(0, m.length - 2);
-			self.send_kex_init();
-			return;
-		},
+        /* Sends our local SSH version to the SSH server.
+           Returns a buffer of any remaining data */
+        0: function(self, m){
+            // Directly interface with the websocket
+            if (!this.local_kex_sent) {
+                self.parceler.socket.sendB64(self.local_version + '\r\n');
+                self.send_kex_init();
+            }
+
+            // Find the end of the remote version string
+            var end = m.indexOf('\r\n');
+            if (end != -1) {
+                self.remote_version = m.slice(0, end + 2);
+                // packets start after '\r\n', return them for processing
+                m = m.slice(end)
+            }
+
+            return m;
+        },
         /* SSH_MSG_DISCONNECT - sent by the SSH server when the connection is gracefully closed */
         1: function(self, m) {
             self.disconnect();

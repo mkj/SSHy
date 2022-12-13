@@ -86,9 +86,9 @@ SSHyClient.Transport.prototype = {
             // Find the end of the remote version string
             var end = m.indexOf('\r\n');
             if (end != -1) {
-                self.remote_version = m.slice(0, end + 2);
+                self.remote_version = m.slice(0, end);
                 // packets start after '\r\n', return them for processing
-                m = m.slice(end)
+                m = m.slice(end + 2)
             }
 
             return m;

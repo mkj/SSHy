@@ -72,14 +72,14 @@ SSHyClient.parceler.prototype = {
 
 		/* If we don't have a remote_version then send our version and set the remote_version */
 		if (!this.transport.remote_version) {
-			this.inbound_buffer = this.transport.handler_table[0](this.transport, this.unbound_buffer);
+			this.inbound_buffer = this.transport.handler_table[0](this.transport, this.inbound_buffer);
 			if (!this.transport.remote_version) {
 				// still waiting for initial version string
 				return;
 			}
 		}
 
-		this.decrypt(r);
+		this.decrypt();
 	},
 	// Decrypt messages from the SSH server
     decrypt: function() {
